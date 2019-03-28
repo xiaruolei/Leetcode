@@ -1,0 +1,85 @@
+# Implement Deque using 3 Stacks (Amortized time O(1)) 
+
+class MyDeque(object):
+    def __init__(self):
+        """
+        Initialize your data structure here.
+        """
+        self.stack1 = []
+        self.stack2 = []
+        self.stack3 = []
+
+    def appendleft(self, x):
+        """
+        Push element x to the front of deque.
+        :type x: int
+        :rtype: None
+        """
+        self.stack1.append(x)
+    
+    def append(self, x):
+        """
+        Push element x to the back of deque.
+        :type x: int
+        :rtype: None
+        """
+        self.stack2.append(x)
+
+
+    def popleft(self):
+        """
+        Removes the element from in front of deque and returns that element.
+        :rtype: int
+        """
+        if self.stack1:
+            return self.stack1.pop()
+
+        lens = len(self.stack2)//2
+        while len(self.stack2) > lens:
+            self.stack3.append(self.stack2.pop())
+
+        while self.stack2:
+            self.stack1.append(self.stack2.pop())
+
+        while self.stack3:
+            self.stack2.append(self.stack3.pop())
+        
+        return self.stack1.pop()
+
+    def pop(self):
+        """
+        Removes the element from in front of deque and returns that element.
+        :rtype: int
+        """
+        if self.stack2:
+            return self.stack2.pop()
+
+        lens = len(self.stack1)//2
+        while len(self.stack1) > lens:
+            self.stack3.append(self.stack1.pop())
+
+        while self.stack1:
+            self.stack2.append(self.stack1.pop())
+
+        while self.stack3:
+            self.stack1.append(self.stack3.pop())
+        
+        return self.stack2.pop()
+
+
+if __name__ == '__main__':
+    # Your MyDeque object will be instantiated and called as such:
+    obj = MyDeque()
+    obj.append(4)
+    obj.append(5)
+    obj.append(2)
+    obj.append(3)
+    obj.append(1)
+    print(obj.pop())
+    print(obj.stack1, obj.stack2)
+    print(obj.popleft())
+    print(obj.stack1, obj.stack2)
+    obj.append(6)
+    print(obj.stack1, obj.stack2)
+    obj.appendleft(7)
+    print(obj.stack1, obj.stack2)
