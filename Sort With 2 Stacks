@@ -6,6 +6,8 @@ Requirements:
 No additional memory, time complexity = O(n ^ 2).
 */
 
+# https://www.youtube.com/watch?v=Jhaf7G_sO3k&feature=youtu.be
+
 class SelectionSort(object):
     def selectionSort(self, stack):
         """
