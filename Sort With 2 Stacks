@@ -1,0 +1,30 @@
+/** Given an array that is initially stored in one stack, sort it with one additional stacks (total 2 stacks).
+After sorting the original stack should contain the sorted integers and from top to bottom the integers are sorted in ascending order.
+Assumptions:
+The given stack is not null.
+Requirements:
+No additional memory, time complexity = O(n ^ 2).
+*/
+
+class SelectionSort(object):
+    def selectionSort(self, stack):
+        """
+        :rtype: list
+        """
+        helper = []
+        while stack:
+            cur = stack.pop()
+            while helper and cur < helper[-1]:
+                stack.append(helper.pop())
+            helper.append(cur)
+
+        while helper:
+            stack.append(helper.pop())
+        return stack
+
+
+
+if __name__ == '__main__':
+    
+    ret = SelectionSort().selectionSort([2,1,3,5,4])
+    print(ret)
