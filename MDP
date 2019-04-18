@@ -1,0 +1,238 @@
+import copy
+from pandas import *
+import timeit
+class MDP(object):
+
+    def __init__(self):
+        """
+        Initialize your data structure here.
+        """
+        self.size = 0
+        self.walls = []
+        self.terminals = []
+        self.p = 0
+        self.rp = 0
+        self.rmax = float('-inf')
+        self.gamma = 0
+        self.reward = []
+        self.actlist = []
+        self.utility = []
+        self.states = []
+
+    def processInput(self):
+        with open("input3.txt") as input:
+            self.size = int(input.readline().strip())
+            # print("size: " + str(self.size))
+
+            wall_number = int(input.readline())
+            for i in range(wall_number):
+                position = input.readline().strip().split(',')
+                x = int(position[0]) - 1
+                y = int(position[1]) - 1
+                self.walls.append((x, y))
+            # print("walls: " + str(self.walls))
+
+            terminal_number = int(input.readline().strip())
+            for i in range(terminal_number):
+                position = input.readline().strip().split(',')
+                x = int(position[0]) - 1
+                y = int(position[1]) - 1
+                rt = int(position[2])
+                self.rmax = max(self.rmax, rt)
+                self.terminals.append((x, y, rt))
+            # print("terminals: " + str(self.terminals))
+
+
+            self.p = float(input.readline().strip())
+            # print("p: " + str(self.p))
+
+            self.rp = float(input.readline().strip())
+            self.rmax = max(self.rmax, self.rp)
+            # print("rp: " + str(self.rp))
+
+            self.gamma = float(input.readline().strip())
+            # print("gamma: " + str(self.gamma))
+
+            self.reward = [[self.rp for x in range(self.size)] for y in range(self.size)]
+            self.actlist = [['*' for x in range(self.size)] for y in range(self.size)]
+
+            for i in range(self.size):
+                for j in range(self.size):
+                    self.states.append((i, j))
+
+            for i in range(len(self.terminals)):
+                terminal = self.terminals[i]
+                self.reward[terminal[0]][terminal[1]] = terminal[2]
+                self.actlist[terminal[0]][terminal[1]] = 'E'
+                self.states.remove((terminal[0], terminal[1]))
+
+            for i in range(len(self.walls)):
+                wall = self.walls[i]
+                self.reward[wall[0]][wall[1]] = None
+                self.actlist[wall[0]][wall[1]] = 'N'
+                self.states.remove((wall[0], wall[1]))
+
+            # print("reward: ")
+            # print(DataFrame(self.reward))
+            # print("actlist: ")
+            # print(DataFrame(self.actlist))
+
+            self.utility = copy.deepcopy(self.reward)
+            # print("utility: ")
+            # print(DataFrame(self.utility))
+
+            # print("states: ")
+            # print(self.states)
+
+            print("rmax: ")
+            print(self.rmax)
+
+    def MDP(self):
+        epsilon = 0.01
+        n = 0
+        while True:
+            # print("***********************")
+            # print("utility: ")
+            # print(DataFrame(self.utility))
+            # print("actlist: ")
+            # print(DataFrame(self.actlist))
+            # print(n)
+
+            n += 1
+            next_utility = copy.deepcopy(self.utility)
+            thelta = 0.0
+
+            # for i in range(self.size):
+            #     for j in range(self.size):
+            for (i, j) in self.states:
+                # print((i, j))
+                next_utility[i][j] = self.getUtility(i, j)
+                thelta = max(thelta, abs(next_utility[i][j] - self.utility[i][j]))
+            # print(delta)
+            if thelta < epsilon * (1 - self.gamma) / self.gamma:
+                print("***********************")
+                print("utility: ")
+                print(DataFrame(self.utility))
+                print("actlist: ")
+                print(DataFrame(self.actlist))
+                print(n)
+                return self.actlist
+            self.utility = next_utility
+        # print("***********************")
+        # print("utility: ")
+        # print(DataFrame(self.utility))
+        # print("actlist: ")
+        # print(DataFrame(self.actlist))
+
+    def getUtility(self, i, j):
+        d = dict()
+        d['U'] = self.actionUp(i, j)
+        d['D'] = self.actionDown(i, j)
+        d['L'] = self.actionLeft(i, j)
+        d['R'] = self.actionRight(i, j)
+
+        direction = max(d, key=d.get)
+        # print(d)
+        self.actlist[i][j] = direction
+
+        return self.reward[i][j] + self.gamma * d[direction]
+
+    def actionUp(self, i, j):
+        sum = 0.0
+
+        if not self.isValid(i - 1, j):
+            sum += self.p * self.utility[i][j]
+        else:
+            sum += self.p * self.utility[i - 1][j]
+
+        if not self.isValid(i - 1, j - 1):
+            sum += 0.5 * (1 - self.p) * self.utility[i][j]
+        else:
+            sum += 0.5 * (1 - self.p) * self.utility[i - 1][j - 1]
+
+        if not self.isValid(i - 1, j + 1):
+            sum += 0.5 * (1 - self.p) * self.utility[i][j]
+        else:
+            sum += 0.5 * (1 - self.p) * self.utility[i - 1][j + 1]
+
+        return sum
+
+    def actionDown(self, i, j):
+        sum = 0.0
+
+        if not self.isValid(i + 1, j):
+            sum += self.p * self.utility[i][j]
+        else:
+            sum += self.p * self.utility[i + 1][j]
+
+        if not self.isValid(i + 1, j - 1):
+            sum += 0.5 * (1 - self.p) * self.utility[i][j]
+        else:
+            sum += 0.5 * (1 - self.p) * self.utility[i + 1][j - 1]
+
+        if not self.isValid(i + 1, j + 1):
+            sum += 0.5 * (1 - self.p) * self.utility[i][j]
+        else:
+            sum += 0.5 * (1 - self.p) * self.utility[i + 1][j + 1]
+
+        return sum
+
+    def actionLeft(self, i, j):
+        sum = 0.0
+
+        if not self.isValid(i, j - 1):
+            sum += self.p * self.utility[i][j]
+        else:
+            sum += self.p * self.utility[i][j - 1]
+
+        if not self.isValid(i - 1, j - 1):
+            sum += 0.5 * (1 - self.p) * self.utility[i][j]
+        else:
+            sum += 0.5 * (1 - self.p) * self.utility[i - 1][j - 1]
+
+        if not self.isValid(i + 1, j - 1):
+            sum += 0.5 * (1 - self.p) * self.utility[i][j]
+        else:
+            sum += 0.5 * (1 - self.p) * self.utility[i + 1][j - 1]
+
+        return sum
+
+    def actionRight(self, i, j):
+        sum = 0.0
+
+        if not self.isValid(i, j + 1):
+            sum += self.p * self.utility[i][j]
+        else:
+            sum += self.p * self.utility[i][j + 1]
+
+        if not self.isValid(i - 1, j + 1):
+            sum += 0.5 * (1 - self.p) * self.utility[i][j]
+        else:
+            sum += 0.5 * (1 - self.p) * self.utility[i - 1][j + 1]
+
+        if not self.isValid(i + 1, j + 1):
+            sum += 0.5 * (1 - self.p) * self.utility[i][j]
+        else:
+            sum += 0.5 * (1 - self.p) * self.utility[i + 1][j + 1]
+
+        return sum
+
+    def isValid(self, i, j):
+        if i < 0 or j < 0 or i >= self.size or j >= self.size or (i, j) in self.walls:
+            return False
+        return True
+
+if __name__ == '__main__':
+    start = timeit.default_timer()
+
+    obj = MDP()
+    obj.processInput()
+    result = obj.MDP()
+    with open('output.txt', 'w') as output:
+        for row in result:
+            output.write(",".join(row) + "\n")
+
+    stop = timeit.default_timer()
+    print('Time: ', stop - start)
+
+
